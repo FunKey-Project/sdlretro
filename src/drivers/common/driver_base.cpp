@@ -200,7 +200,9 @@ bool driver_base::load_game(const std::string &path) {
     }
 
     game_path = path;
+    printf("in %s l.%d\n", __func__, __LINE__);
     post_load();
+    printf("in %s l.%d\n", __func__, __LINE__);
     return true;
 }
 
@@ -694,8 +696,10 @@ void driver_base::check_single_ram(unsigned int id, std::vector<uint8_t> &data, 
 void driver_base::post_load() {
     init_system_av_info();
 
+    printf("in %s l.%d\n", __func__, __LINE__);
     video->inited_hw_renderer();
 
+    printf("in %s l.%d\n", __func__, __LINE__);
     game_base_name = get_base_name(game_path);
     game_save_path = (core_save_dir.empty() ? "" : (core_save_dir + PATH_SEPARATOR_CHAR)) + game_base_name + ".sav";
     game_rtc_path = (core_save_dir.empty() ? "" : (core_save_dir + PATH_SEPARATOR_CHAR)) + game_base_name + ".rtc";
@@ -714,12 +718,18 @@ void driver_base::post_load() {
         if (sz) memcpy(core->retro_get_memory_data(RETRO_MEMORY_RTC), rtc_data.data(), sz);
     }
 
+    printf("in %s l.%d\n", __func__, __LINE__);
     audio->start(g_cfg.get_mono_audio(), sample_rate, g_cfg.get_sample_rate(), fps);
+    printf("in %s l.%d\n", __func__, __LINE__);
     frame_throttle->reset(fps);
     core->retro_set_controller_port_device(0, RETRO_DEVICE_JOYPAD);
+    printf("in %s l.%d\n", __func__, __LINE__);
     video->set_aspect_ratio(aspect_ratio);
+    printf("in %s l.%d\n", __func__, __LINE__);
+    printf("base_width %d base_height %d, max_width %d, max_height %d, pixel_format %d\n", base_width, base_height, max_width, max_width, pixel_format);
     video->game_resolution_changed((int)base_width, (int)base_height, (int)max_width, (int)max_height, pixel_format);
 
+    printf("in %s l.%d\n", __func__, __LINE__);
     char library_message[256];
     snprintf(library_message, 256, "Loaded core: %s"_i18n, library_name.c_str());
     video->add_message(library_message, lround(fps * 5));

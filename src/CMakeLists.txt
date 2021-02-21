@@ -75,5 +75,5 @@ endif()
 
 if(MSVC)
     # implementation of getopt for MSVC
-    target_link_libraries(sdlretro wingetopt)
+    #target_link_libraries(sdlretro wingetopt)
 endif()

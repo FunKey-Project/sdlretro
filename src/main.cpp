@@ -20,8 +20,8 @@
 #include <getopt.h>
 
 #define DEFAULT_DATA_DIR "."
-#ifdef GCW_ZERO
-#define DEFAULT_STORE_DIR "/usr/local/home/.sdlretro"
+#ifdef FUNKEY
+#define DEFAULT_STORE_DIR "/mnt/FunKey/.sdlretro" //better with getenv("HOME")
 #else
 #define DEFAULT_STORE_DIR "."
 #endif
@@ -85,6 +85,8 @@ int main(int argc, char *argv[]) {
 
     libretro::core_manager coreman;
 
+    printf("before setting core vid\n");
+
 #if SDLRETRO_FRONTEND == 1
     auto impl = drivers::create_driver<drivers::sdl1_impl>();
 #endif
@@ -95,6 +97,8 @@ int main(int argc, char *argv[]) {
         spdlog::error("Unable to create driver!");
         return 1;
     }
+
+    printf("after setting core vid\n");
 
     gui::ui_menu menu(impl);
 
@@ -192,7 +196,9 @@ int main(int argc, char *argv[]) {
     } else {
         impl->load_game_from_mem(rom_filename, rom_ext, unzipped_data);
     }
+    printf("in %s l.%d\n", __func__, __LINE__);
     impl->run([&menu] { menu.in_game_menu(); });
+    printf("in %s l.%d\n", __func__, __LINE__);
     impl->unload_game();
 
     return 0;

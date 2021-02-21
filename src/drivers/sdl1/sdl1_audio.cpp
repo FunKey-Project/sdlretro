@@ -23,12 +23,16 @@ bool sdl1_audio::open(unsigned buffer_size) {
     spec.channels = mono_audio ? 1 : 2;
     spec.samples = buffer_size;
     spec.userdata = this;
+    printf("in %s l.%d\n", __func__, __LINE__);
     if (SDL_OpenAudio(&spec, &obtained) != 0) return false;
+    printf("in %s l.%d\n", __func__, __LINE__);
     output_sample_rate = static_cast<unsigned>(obtained.freq);
 
     buffer.resize(buffer_size * 8);
 
+    printf("in %s l.%d\n", __func__, __LINE__);
     SDL_PauseAudio(0);
+    printf("in %s l.%d\n", __func__, __LINE__);
     return true;
 }
 

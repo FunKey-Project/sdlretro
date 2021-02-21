@@ -25,6 +25,7 @@ bool audio_base::start(bool mono, double sample_rate_in, unsigned sample_rate_ou
     mono_audio = mono;
     sample_rate_input = sample_rate_in;
     if (sample_rate_out == 0) {
+    printf("in %s l.%d\n", __func__, __LINE__);
         output_sample_rate = lround(sample_rate_in);
         unsigned n = 1;
         while(n < 16) {
@@ -36,12 +37,15 @@ bool audio_base::start(bool mono, double sample_rate_in, unsigned sample_rate_ou
         sample_multiplier = n;
         output_sample_rate /= n;
     } else {
+    printf("in %s l.%d\n", __func__, __LINE__);
         src_state = src_new(g_cfg.get_resampler_quality() > 4 ? 0 : (int)(4 - g_cfg.get_resampler_quality()), 2, nullptr);
         output_sample_rate = sample_rate_out;
         sample_ratio = output_sample_rate / sample_rate_in;
     }
+    printf("in %s l.%d\n", __func__, __LINE__);
     auto buffer_size = pullup(lround(output_sample_rate / fps));
     resampler_cache.reserve(resampler_cache_size);
+    printf("in %s l.%d\n", __func__, __LINE__);
     return open(buffer_size);
 }
 
