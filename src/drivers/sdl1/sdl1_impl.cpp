@@ -40,8 +40,8 @@ bool sdl1_impl::process_events() {
         case SDL_KEYDOWN:
         case SDL_KEYUP:
             if (event.key.keysym.sym ==
-#ifdef GCW_ZERO
-                SDLK_HOME
+#ifdef FUNKEY
+                SDLK_q
 #else
                 SDLK_ESCAPE
 #endif

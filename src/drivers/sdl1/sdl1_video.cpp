@@ -25,8 +25,8 @@ sdl1_video::sdl1_video() {
     g_cfg.get_resolution(curr_width, curr_height);
     curr_pixel_format = 2;
 
-    #warning forced
-    curr_width=240; curr_height=240;
+    /*#warning forced
+    curr_width=240; curr_height=240;*/
     
     printf("in %s l.%d\n", __func__, __LINE__);
     screen = SDL_SetVideoMode(curr_width, curr_height, 16, sdl_video_flags);
@@ -58,8 +58,8 @@ bool sdl1_video::game_resolution_changed(int width, int height, int max_width, i
             curr_height = (int)height;
             auto scale = force_scale == 0 ? g_cfg.get_scale() : force_scale;
 
-            #warning forced
-            scale=1;
+            /*#warning forced
+            scale=1;*/
 
     printf("in %s l.%d\n", __func__, __LINE__);
             screen = SDL_SetVideoMode(width * scale, height * scale, bpp, sdl_video_flags);
@@ -190,7 +190,7 @@ int sdl1_video::get_font_size() const {
     if (ttf[0]) {
         return ttf[0]->get_font_size();
     } else {
-#ifdef GCW_ZERO
+#ifdef FUNKEY
         return 8;
 #else
         return 16;
@@ -259,7 +259,7 @@ void sdl1_video::draw_text(int x, int y, const char *text, int width, bool shado
 #include "bmfont.inl"
 
 inline const font_data_t &get_pixel_font_data(uint8_t c) {
-#ifdef GCW_ZERO
+#ifdef FUNKEY
     return font_small_data[c];
 #else
     return font_big_data[c];
@@ -299,7 +299,7 @@ void sdl1_video::draw_text_pixel(int x, int y, const char *text, int width, bool
     bool allow_wrap = false;
     int nwidth;
     int ox = x;
-#ifdef GCW_ZERO
+#ifdef FUNKEY
     y -= 8;
 #else
     y -= 16;
@@ -328,7 +328,7 @@ void sdl1_video::draw_text_pixel(int x, int y, const char *text, int width, bool
             if (!allow_wrap) break;
             x = ox;
             nwidth = width;
-#ifdef GCW_ZERO
+#ifdef FUNKEY
             y += 8 + 1;
 #else
             y += 16 + 1;

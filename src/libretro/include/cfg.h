@@ -5,8 +5,8 @@
 #include <cstdint>
 
 enum :uint32_t {
-#ifdef GCW_ZERO
-    DEFAULT_WIDTH = 320,
+#ifdef FUNKEY
+    DEFAULT_WIDTH = 240,
     DEFAULT_HEIGHT = 240,
     DEFAULT_SCALE = 1,
 #else
