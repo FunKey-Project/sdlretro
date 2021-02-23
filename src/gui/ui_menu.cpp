@@ -58,7 +58,7 @@ void ui_menu::in_game_menu() {
                 driver->reset();
                 return true;
             }},
-            {menu_static, "Exit"_i18n, "", 0, {}, [this](const menu_item &) {
+            {menu_static, "Exit Game"_i18n, "", 0, {}, [this](const menu_item &) {
                 driver->shutdown();
                 return true;
             }},

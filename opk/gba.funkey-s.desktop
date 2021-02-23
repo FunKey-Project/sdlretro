@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=GPSP_libretro
+Comment=libretro gpsp core
+Icon=gba_icon
+Exec=sdlretro %f
+Terminal=false
+StartupNotify=true
+X-OD-NeedsDownscaling=true
+Categories=emulators;
+selectorbrowser=true
+SelectorDir=/mnt/Game Boy Advance
+SelectorFilter=gba,GBA

@@ -330,9 +330,11 @@ bool driver_base::env_callback(unsigned cmd, void *data) {
         case RETRO_ENVIRONMENT_GET_VARIABLE: {
             variables->set_variables_updated(false);
             auto *var = (retro_variable *)data;
+            printf("var asked = %s\n", var->key);
             auto *vari = variables->get_variable(var->key);
-            if (vari) {
+            if (vari != nullptr) {
                 var->value = vari->options[vari->curr_index].first.c_str();
+                printf("var->value = %s\n", var->value);
                 return true;
             }
             return false;
@@ -732,7 +734,7 @@ void driver_base::post_load() {
     printf("in %s l.%d\n", __func__, __LINE__);
     char library_message[256];
     snprintf(library_message, 256, "Loaded core: %s"_i18n, library_name.c_str());
-    video->add_message(library_message, lround(fps * 5));
+    //video->add_message(library_message, lround(fps * 5));
 }
 
 void driver_base::init_system_av_info() {

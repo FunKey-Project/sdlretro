@@ -58,9 +58,12 @@ void ttf_font_base::deinit() {
 }
 
 bool ttf_font_base::add(const std::string &filename, int index) {
+    printf("%s %s\n", __func__, filename.c_str());
     font_info fi;
 #ifdef USE_STB_TRUETYPE
+    printf("using truetype\n");
     if (!util::read_file(filename, fi.ttf_buffer)) {
+        printf("In %s, using truetype, font %s not found\n", __func__, filename.c_str());
         return false;
     }
     auto *info = new stbtt_fontinfo;
@@ -69,7 +72,10 @@ bool ttf_font_base::add(const std::string &filename, int index) {
 	fi.font = info;
     fonts.emplace_back(std::move(fi));
 #else
-    if (FT_New_Face(ft_lib, filename.c_str(), index, &fi.face)) return false;
+    if (FT_New_Face(ft_lib, filename.c_str(), index, &fi.face)){
+        printf("In %s, font %s not found\n", __func__, filename.c_str());
+        return false;
+    }
     FT_Set_Pixel_Sizes(fi.face, 0, font_size);
     fonts.emplace_back(fi);
 #endif

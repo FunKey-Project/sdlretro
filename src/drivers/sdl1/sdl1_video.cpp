@@ -21,26 +21,38 @@ const int sdl_video_flags = SDL_SWSURFACE |
 
 sdl1_video::sdl1_video() {
     SDL_ShowCursor(SDL_DISABLE);
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
     g_cfg.get_resolution(curr_width, curr_height);
     curr_pixel_format = 2;
 
     /*#warning forced
     curr_width=240; curr_height=240;*/
     
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
     screen = SDL_SetVideoMode(curr_width, curr_height, 16, sdl_video_flags);
     SDL_LockSurface(screen);
     screen_ptr = screen->pixels;
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
 
-    ttf[0] = std::make_shared<sdl1_ttf>();
-    ttf[0]->init(16, 0);
-    ttf[0]->add(g_cfg.get_data_dir() + PATH_SEPARATOR_CHAR + "fonts" + PATH_SEPARATOR_CHAR + "regular.ttf", 0);
-    ttf[1] = std::make_shared<sdl1_ttf>();
-    ttf[1]->init(16, 0);
-    ttf[1]->add(g_cfg.get_data_dir() + PATH_SEPARATOR_CHAR + "fonts" + PATH_SEPARATOR_CHAR + "bold.ttf", 0);
-    printf("in %s l.%d\n", __func__, __LINE__);
+    const std::string font_path_regular(g_cfg.get_data_dir() + PATH_SEPARATOR_CHAR + "fonts" + PATH_SEPARATOR_CHAR + "regular.ttf");
+    if (util::file_exists(font_path_regular)) {
+        ttf[0] = std::make_shared<sdl1_ttf>();
+        ttf[0]->init(16, 0);
+        ttf[0]->add(font_path_regular, 0);
+    }
+    else{
+        printf("In %s, font regular \"%s\" not found\n", __func__, font_path_regular.c_str());
+    }
+    const std::string font_path_bold(g_cfg.get_data_dir() + PATH_SEPARATOR_CHAR + "fonts" + PATH_SEPARATOR_CHAR + "regular.ttf");
+    if (util::file_exists(font_path_bold)) {
+        ttf[1] = std::make_shared<sdl1_ttf>();
+        ttf[1]->init(16, 0);
+        ttf[1]->add(font_path_bold, 0);
+    }
+    else{
+        printf("In %s, font bold \"%s\" not found\n", __func__, font_path_regular.c_str());
+    }
+    //printf("in %s l.%d\n", __func__, __LINE__);
 }
 
 sdl1_video::~sdl1_video() {
@@ -58,23 +70,20 @@ bool sdl1_video::game_resolution_changed(int width, int height, int max_width, i
             curr_height = (int)height;
             auto scale = force_scale == 0 ? g_cfg.get_scale() : force_scale;
 
-            /*#warning forced
-            scale=1;*/
-
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
             screen = SDL_SetVideoMode(width * scale, height * scale, bpp, sdl_video_flags);
             if (screen == NULL) {
                 printf("%s\n", SDL_GetError());
                 exit(1);
             }
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
         } else {
             g_cfg.get_resolution(curr_width, curr_height);
             screen = SDL_SetVideoMode(curr_width, curr_height, bpp, sdl_video_flags);
         }
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
         SDL_LockSurface(screen);
-    printf("in %s l.%d\n", __func__, __LINE__);
+    //printf("in %s l.%d\n", __func__, __LINE__);
         screen_ptr = screen->pixels;
     } else {
         curr_width = (int)width;
@@ -100,9 +109,6 @@ void sdl1_video::render(const void *data, int width, int height, size_t pitch) {
     }
     int h = static_cast<int>(height);
     auto scale = g_cfg.get_scale();
-    
-            #warning forced
-            scale=1;
 
     unsigned bpp = curr_pixel_format == 1 ? 32 : 16;
     if (scale == 1) {
@@ -250,8 +256,10 @@ void sdl1_video::fill_rectangle(int x, int y, int w, int h) {
 
 void sdl1_video::draw_text(int x, int y, const char *text, int width, bool shadow) {
     if (ttf[0]) {
+        //printf("ttf[0]->render \"%s\" at {%d, %d}, width=%d, shadown=%d\n", text, x, y, width, shadow);
         ttf[0]->render(screen, x, y, text, width, shadow);
     } else {
+        //printf("draw_text_pixel \"%s\" at {%d, %d}, width=%d, shadown=%d\n", text, x, y, width, shadow);
         draw_text_pixel(x, y, text, width, shadow);
     }
 }
@@ -300,7 +308,7 @@ void sdl1_video::draw_text_pixel(int x, int y, const char *text, int width, bool
     int nwidth;
     int ox = x;
 #ifdef FUNKEY
-    y -= 8;
+    //y -= 8;
 #else
     y -= 16;
 #endif

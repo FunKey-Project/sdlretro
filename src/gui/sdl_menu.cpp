@@ -5,6 +5,13 @@
 
 #include "i18n.h"
 
+//#define DEBUG
+#ifdef DEBUG
+    #define DEBUG_PRINTF(...)   printf(__VA_ARGS__);
+#else
+    #define DEBUG_PRINTF(...)
+#endif //DEBUG
+
 namespace gui {
 
 enum {
@@ -13,6 +20,7 @@ enum {
 };
 
 void sdl_menu::enter() {
+    DEBUG_PRINTF("File: %s, function: %s, l.%d\n", __FILE__, __func__, __LINE__ );
     auto *video = driver->get_video();
     auto font_size = video->get_font_size();
     line_height = font_size + font_size / 4 + line_spacing;
@@ -95,6 +103,7 @@ void sdl_menu::leave() {
 }
 
 void sdl_menu::draw() {
+    DEBUG_PRINTF("File: %s, function: %s, l.%d\n", __FILE__, __func__, __LINE__ );
     auto *video = driver->get_video();
     auto font_size = video->get_font_size();
     int x = key_x, y = menu_y + font_size;
@@ -110,9 +119,14 @@ void sdl_menu::draw() {
     if (end_index > item_size) end_index = item_size;
     for (size_t i = top_index; i < end_index; ++i) {
         auto &item = items[i];
+        DEBUG_PRINTF("  i=%d, text=%s%s\n", i, item.text.c_str(), (i == selected)?", selected":"");
         if (i == selected) {
             video->set_draw_color(0x60, 0x80, 0xA0, 0xFF);
-            video->fill_rectangle(x - 3, y + top_most - 3, item_width + (value_width ? (gap_between_key_and_value + value_width) : 0) + 6, bot_most - top_most + 6);
+            DEBUG_PRINTF("  y=%d, top_most=%d, bot_most=%d\n", y, top_most, bot_most);
+            video->fill_rectangle(x - 3, 
+                y + top_most - 3, 
+                item_width + (value_width ? (gap_between_key_and_value + value_width) : 0) + 6, 
+                bot_most - top_most + 6);
         }
         video->draw_text(x, y, item.text.c_str(), item_width, true);
         switch (item.type) {

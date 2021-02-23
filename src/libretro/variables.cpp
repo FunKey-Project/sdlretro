@@ -10,6 +10,7 @@
 namespace libretro {
 
 void retro_variables::load_variables(const retro_core_option_definition *def) {
+    printf("In %s, l%d\n", __func__, __LINE__);
     variables.clear();
     while (def->key != nullptr) {
         retro_variable_t *var = nullptr;
@@ -43,6 +44,7 @@ void retro_variables::load_variables(const retro_core_option_definition *def) {
 }
 
 void retro_variables::load_variables(const retro_core_options_intl *def) {
+    printf("In %s, l%d\n", __func__, __LINE__);
     if (g_cfg.get_language() == 0 || !def->local) {
         load_variables(def->us);
         return;
@@ -51,6 +53,7 @@ void retro_variables::load_variables(const retro_core_options_intl *def) {
 }
 
 void retro_variables::load_variables(const retro_variable *vars) {
+    printf("In %s, l%d\n", __func__, __LINE__);
     variables.clear();
     while (vars->key != nullptr) {
         std::string value = vars->value;
@@ -90,7 +93,10 @@ void retro_variables::load_variables(const retro_variable *vars) {
 }
 
 void retro_variables::load_variables_from_cfg(const std::string &filename) {
+    printf("In %s, config filename is %s\n", __func__, filename.c_str());
+
     if (!util::file_exists(filename)) return;
+
     nlohmann::json j;
     try {
         std::string content;
@@ -120,6 +126,7 @@ void retro_variables::load_variables_from_cfg(const std::string &filename) {
 }
 
 void retro_variables::save_variables_to_cfg(const std::string &filename) {
+    printf("In %s, config filename is %s\n", __func__, filename.c_str());
     nlohmann::json j;
     for (auto &var: variables) {
         j[var.name] = var.options[var.curr_index].first;
