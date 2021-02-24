@@ -734,7 +734,7 @@ void driver_base::post_load() {
     printf("in %s l.%d\n", __func__, __LINE__);
     char library_message[256];
     snprintf(library_message, 256, "Loaded core: %s"_i18n, library_name.c_str());
-    //video->add_message(library_message, lround(fps * 5));
+    video->add_message(library_message, lround(fps * 5));
 }
 
 void driver_base::init_system_av_info() {

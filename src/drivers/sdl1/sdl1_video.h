@@ -36,6 +36,8 @@ public:
 
 private:
     void draw_text_pixel(int x, int y, const char *text, int width, bool shadow);
+    void sdl1_reset_screen_surface(int width, int height, int bpp);
+    void scale_NN_AllowOutOfScreen(SDL_Surface *src_surface, SDL_Surface *dst_surface, int new_w, int new_h);
 
 public:
     void enter_menu() override;
@@ -43,6 +45,7 @@ public:
 
 private:
     SDL_Surface *screen = nullptr;
+    SDL_Surface *hw_screen = nullptr;
 	void *screen_ptr = nullptr;
     std::shared_ptr<sdl1_ttf> ttf[2];
     int curr_width = 0, curr_height = 0;

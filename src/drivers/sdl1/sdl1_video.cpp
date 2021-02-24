@@ -24,13 +24,16 @@ sdl1_video::sdl1_video() {
     //printf("in %s l.%d\n", __func__, __LINE__);
     g_cfg.get_resolution(curr_width, curr_height);
     curr_pixel_format = 2;
-
-    /*#warning forced
-    curr_width=240; curr_height=240;*/
     
     //printf("in %s l.%d\n", __func__, __LINE__);
-    screen = SDL_SetVideoMode(curr_width, curr_height, 16, sdl_video_flags);
-    SDL_LockSurface(screen);
+    hw_screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, 16, sdl_video_flags);
+    if (hw_screen == NULL) {
+        printf("Error in %s: %s\n", __func__, SDL_GetError());
+        exit(1);
+    }
+    sdl1_reset_screen_surface(curr_width, curr_height, 16);
+    
+    //SDL_LockSurface(screen);
     screen_ptr = screen->pixels;
     //printf("in %s l.%d\n", __func__, __LINE__);
 
@@ -56,22 +59,37 @@ sdl1_video::sdl1_video() {
 }
 
 sdl1_video::~sdl1_video() {
-    SDL_UnlockSurface(screen);
+    //SDL_UnlockSurface(screen);
+
+    if(screen)
+        SDL_FreeSurface(screen);
+}
+
+void sdl1_video::sdl1_reset_screen_surface(int width, int height, int bpp){
+    if(screen)
+        SDL_FreeSurface(screen);
+    screen = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, bpp, 0, 0, 0, 0);    
 }
 
 bool sdl1_video::game_resolution_changed(int width, int height, int max_width, int max_height, unsigned pixel_format) {
     if (g_cfg.get_scaling_mode() == 0) {
-        SDL_UnlockSurface(screen);
+        //SDL_UnlockSurface(screen);
         usleep(10000);
+        bool bpp_changed=(curr_pixel_format != pixel_format);
         curr_pixel_format = pixel_format;
         unsigned bpp = pixel_format == 1 ? 32 : 16;
+
+        if(bpp_changed)
+            hw_screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, bpp, sdl_video_flags);
+
         if (width != 0 && height != 0) {
             curr_width = (int)width;
             curr_height = (int)height;
             auto scale = force_scale == 0 ? g_cfg.get_scale() : force_scale;
 
     //printf("in %s l.%d\n", __func__, __LINE__);
-            screen = SDL_SetVideoMode(width * scale, height * scale, bpp, sdl_video_flags);
+            //screen = SDL_SetVideoMode(width * scale, height * scale, bpp, sdl_video_flags);
+            sdl1_reset_screen_surface(width * scale, height * scale, bpp);
             if (screen == NULL) {
                 printf("%s\n", SDL_GetError());
                 exit(1);
@@ -79,10 +97,11 @@ bool sdl1_video::game_resolution_changed(int width, int height, int max_width, i
     //printf("in %s l.%d\n", __func__, __LINE__);
         } else {
             g_cfg.get_resolution(curr_width, curr_height);
-            screen = SDL_SetVideoMode(curr_width, curr_height, bpp, sdl_video_flags);
+            //screen = SDL_SetVideoMode(curr_width, curr_height, bpp, sdl_video_flags);
+            sdl1_reset_screen_surface(curr_width, curr_height, bpp);
         }
     //printf("in %s l.%d\n", __func__, __LINE__);
-        SDL_LockSurface(screen);
+        //SDL_LockSurface(screen);
     //printf("in %s l.%d\n", __func__, __LINE__);
         screen_ptr = screen->pixels;
     } else {
@@ -166,6 +185,58 @@ void sdl1_video::render(const void *data, int width, int height, size_t pitch) {
     }
 }
 
+/// Nearest neighboor optimized with possible out of screen coordinates (for cropping)
+void sdl1_video::scale_NN_AllowOutOfScreen(SDL_Surface *src_surface, SDL_Surface *dst_surface, int new_w, int new_h){
+
+    /// Sanity check
+    if(src_surface->format->BytesPerPixel != dst_surface->format->BytesPerPixel){
+        printf("Error in %s, src_surface bpp: %d != dst_surface bpp: %d", __func__, 
+            src_surface->format->BytesPerPixel, dst_surface->format->BytesPerPixel);
+        return;
+    }
+
+    int BytesPerPixel=src_surface->format->BytesPerPixel;
+    int w1=src_surface->w;
+    //int h1=src_surface->h;
+    int w2=new_w;
+    int h2=new_h;
+    int x_ratio = (int)((src_surface->w<<16)/w2);
+    int y_ratio = (int)((src_surface->h<<16)/h2);
+    int x2, y2 ;
+
+    /// --- Compute padding for centering when out of bounds ---
+    int y_padding = (RES_HW_SCREEN_VERTICAL-new_h)/2;
+    int x_padding = 0;
+    if(w2>RES_HW_SCREEN_HORIZONTAL){
+        x_padding = (w2-RES_HW_SCREEN_HORIZONTAL)/2 + 1;
+    }
+    int x_padding_ratio = x_padding*w1/w2;
+    //printf("src_surface->h=%d, h2=%d\n", src_surface->h, h2);
+
+    for (int i=0;i<h2;i++)
+    {
+        if(i>=RES_HW_SCREEN_VERTICAL){
+              continue;
+        }
+
+        uint8_t* t = (uint8_t*)(dst_surface->pixels) + ((i+y_padding) * ((w2>RES_HW_SCREEN_HORIZONTAL)?RES_HW_SCREEN_HORIZONTAL:w2))*BytesPerPixel;
+        y2 = ((i*y_ratio)>>16);
+        uint8_t* p = (uint8_t*)(src_surface->pixels) + (y2*w1 + x_padding_ratio)*BytesPerPixel;
+        int rat = 0;
+        for (int j=0;j<w2;j++)
+        {
+            if(j>=RES_HW_SCREEN_HORIZONTAL){
+               continue;
+            }
+            x2 = (rat>>16);
+            //*t++ = p[x2];
+            memcpy(t, &p[x2*BytesPerPixel], BytesPerPixel);
+            t+=BytesPerPixel;
+            rat += x_ratio;
+        }
+    }
+}
+
 void sdl1_video::frame_render() {
     if (drawn) {
         flip();
@@ -186,9 +257,13 @@ void sdl1_video::clear() {
 }
 
 void sdl1_video::flip() {
-    SDL_UnlockSurface(screen);
-    SDL_Flip(screen);
-    SDL_LockSurface(screen);
+    //SDL_UnlockSurface(screen);
+
+    /// Stretched AR
+    scale_NN_AllowOutOfScreen(screen, hw_screen, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    
+    SDL_Flip(hw_screen);
+    //SDL_LockSurface(screen);
     screen_ptr = screen->pixels;
 }
 
@@ -397,15 +472,21 @@ void sdl1_video::draw_text_pixel(int x, int y, const char *text, int width, bool
 }
 
 void sdl1_video::enter_menu() {
-    SDL_UnlockSurface(screen);
+    //SDL_UnlockSurface(screen);
     usleep(10000);
     saved_width = curr_width;
     saved_height = curr_height;
     saved_pixel_format = curr_pixel_format;
     g_cfg.get_resolution(curr_width, curr_height);
+
+    if(curr_pixel_format != 2)
+        hw_screen = SDL_SetVideoMode(DEFAULT_WIDTH, DEFAULT_HEIGHT, 16, sdl_video_flags);
+
     curr_pixel_format = 2;
-    screen = SDL_SetVideoMode(curr_width, curr_height, curr_pixel_format == 1 ? 32 : 16, sdl_video_flags);
-    SDL_LockSurface(screen);
+    //screen = SDL_SetVideoMode(curr_width, curr_height, curr_pixel_format == 1 ? 32 : 16, sdl_video_flags);
+    sdl1_reset_screen_surface(RES_HW_SCREEN_HORIZONTAL, RES_HW_SCREEN_VERTICAL, curr_pixel_format == 1 ? 32 : 16);
+
+    //SDL_LockSurface(screen);
     screen_ptr = screen->pixels;
 }
 
